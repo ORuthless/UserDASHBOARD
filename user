@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>ClientInsight AI Metrics Dashboard</title>
+  <style>
+    body {
+      background: url('https://t4.ftcdn.net/jpg/02/20/75/29/360_F_220752931_KnNVZeTynilsa54SihrSdAQtP5y3eCDp.jpg')
+        no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      background-color: #2a2a2a;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      background: #1e1e1e;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      width: 80%;
+      max-width: 800px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      color: #fff;
+    }
+
+    th,
+    td {
+      border: 1px solid #444;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #333;
+    }
+
+    .logo-container {
+      border: 3px solid #fff;
+      padding: 5px;
+      display: inline-block;
+      border-radius: 10px;
+    }
+
+    /* Gray-out style for locked buttons */
+    button.locked {
+      background: grey !important;
+      cursor: not-allowed !important;
+    }
+
+    /* Admin panel styling */
+    .admin-panel {
+      display: none; /* hidden until user logs in as admin */
+      margin-top: 10px;
+      text-align: left;
+    }
+    .admin-panel textarea {
+      width: 100%;
+      height: 150px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-family: monospace;
+    }
+  </style>
+  <style>
+    .geo-location-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(30, 30, 30, 0.8);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      color: white;
+      font-size: 14px;
+    }
+    .geo-location-slider {
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Overlay -->
+  <div
+    id="loginContainer"
+    style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    "
+  >
+    <div
+      style="
+        background: #1e1e1e;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        color: white;
+      "
+    >
+      <h2>Login</h2>
+      <input
+        type="text"
+        id="username"
+        placeholder="Username"
+        style="padding: 10px; margin: 5px; width: 80%; border-radius: 5px"
+      /><br />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        style="padding: 10px; margin: 5px; width: 80%; border-radius: 5px"
+      /><br />
+      <button
+        onclick="checkLogin()"
+        style="
+          padding: 10px 20px;
+          background-color: #00bfff;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        "
+      >
+        Login
+      </button>
+      <p id="loginError" style="color: red; display: none">
+        Invalid username or password
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Valid users:
+    // - Ruthless (Admin)
+    // - DelwinSSS (Admin)
+    // - JETFLOSS (Not an admin)
+    const validUsers = {
+      Ruthless: "374721",
+      DelwinSSS: "Admin123",
+      JETFLOSS: "User123",
+    };
+    let currentUser = null;
+
+    function checkLogin() {
+      let username = document.getElementById("username").value;
+      let password = document.getElementById("password").value;
+
+      if (validUsers[username] && validUsers[username] === password) {
+        localStorage.setItem("isUserLoggedIn", "true");
+        localStorage.setItem("loggedInUsername", username);
+        document.getElementById("loginContainer").style.display = "none";
+        currentUser = username;
+        maybeShowAdminPanel();
+      } else {
+        document.getElementById("loginError").style.display = "block";
+      }
+    }
+
+    // Show admin panel only for Ruthless or DelwinSSS
+    function maybeShowAdminPanel() {
+      if (currentUser === "Ruthless" || currentUser === "DelwinSSS") {
+        document.querySelector(".admin-panel").style.display = "block";
+      }
+    }
+  </script>
+
+  <!-- Logo / Header -->
+  <header>
+    <div class="logo-container">
+      <img
+        src="https://ik.imagekit.io/ClientInsightAI/474733806_624450609966797_497836.jpg?updatedAt=1738267531929"
+        alt="Company Logo"
+        style="height: 150px; margin-bottom: 20px"
+      />
+    </div>
+  </header>
+  <h1>ClientInsight AI</h1>
+  <h2 style="margin-top: -5px">Dashboard</h2>
+  <p>
+    <a
+      href="https://bankonitdao.my.canva.site/clientinsight-ai"
+      target="_blank"
+      style="color: #00bfff; text-decoration: none"
+      >Visit Website</a
+    >
+  </p>
+  <p>
+    <a
+      href="mailto:olivia@clientinsightai.co.za"
+      style="color: #00bfff; text-decoration: none"
+      >Support</a
+    >
+  </p>
+
+  <!-- Metrics Table -->
+  <h2>Sophia AI</h2>
+  <div class="container">
+    <table id="metricsTable">
+      <thead>
+        <tr id="headerRow"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Admin Panel for editing the table data -->
+  <div class="container admin-panel">
+    <h3>Admin Table Editor</h3>
+    <p style="font-size: 14px; color: #ccc;">
+      Below is your CSV data. First row is column headers.
+    </p>
+    <textarea id="csvInput"></textarea>
+    <br />
+    <button onclick="adminSaveTable()" style="padding: 5px 10px; margin-right: 5px;">
+      Save Table
+    </button>
+    <button onclick="adminClearTable()" style="padding: 5px 10px; background: red;">
+      Clear Table
+    </button>
+  </div>
+
+  <script>
+    // Default CSV if "tableData" not found in localStorage
+    const defaultCsv = `Category,Month,Users,Revenue
+Food,January,120,R1200
+Food,February,130,R1560
+Travel,January,80,R800
+Travel,February,90,R1100`;
+
+    function loadTableData() {
+      let storedCsv = localStorage.getItem("tableData");
+      if (!storedCsv) {
+        localStorage.setItem("tableData", defaultCsv);
+        storedCsv = defaultCsv;
+      }
+      return storedCsv;
+    }
+
+    function parseCsv(csvText) {
+      const rows = csvText.trim().split("\n");
+      return rows.map(row => row.split(",").map(cell => cell.trim()));
+    }
+
+    function renderTableFromCsv(csvText) {
+      const rows = parseCsv(csvText);
+      if (!rows.length) return;
+
+      const header = rows[0]; // first row is header
+      const bodyRows = rows.slice(1);
+
+      const headerRowEl = document.getElementById("headerRow");
+      const tableBodyEl = document.getElementById("tableBody");
+
+      // Render headers
+      headerRowEl.innerHTML = header
+        .map(col => `<th>${col}</th>`)
+        .join("");
+
+      // Render body
+      tableBodyEl.innerHTML = bodyRows
+        .map(
+          row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
+        )
+        .join("");
+    }
+
+    function adminSaveTable() {
+      const newCsv = document.getElementById("csvInput").value;
+      localStorage.setItem("tableData", newCsv);
+      renderTableFromCsv(newCsv);
+      alert("Table data saved!");
+    }
+
+    function adminClearTable() {
+      if (!confirm("Are you sure you want to clear all table data?")) return;
+      localStorage.removeItem("tableData");
+      document.getElementById("headerRow").innerHTML = "";
+      document.getElementById("tableBody").innerHTML = "";
+      document.getElementById("csvInput").value = "";
+      alert("Table data cleared!");
+    }
+  </script>
+
+  <!-- Modal for Images -->
+  <div
+    id="imageModal"
+    class="modal"
+    onclick="this.style.display='none'"
+    style="
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+    "
+  >
+    <img
+      id="modalImage"
+      src=""
+      alt="Preview"
+      style="max-width: 90%; max-height: 90%; border-radius: 8px"
+    />
+  </div>
+
+  <!-- Image Upload and Gallery Section -->
+  <h2>Gallery Upload</h2>
+  <div class="container">
+    <input
+      type="file"
+      id="imageUpload"
+      multiple
+      accept="image/*"
+      style="margin-bottom: 10px; color: white"
+    />
+    <div id="galleryImages" style="display: flex; flex-wrap: wrap"></div>
+  </div>
+  <script>
+    const imgUpload = document.getElementById("imageUpload");
+    if (imgUpload) {
+      imgUpload.addEventListener("change", function (event) {
+        const gallery = document.getElementById("galleryImages");
+        for (const file of event.target.files) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const imgContainer = document.createElement("div");
+            imgContainer.style.position = "relative";
+            imgContainer.style.margin = "10px";
+
+            const img = document.createElement("img");
+            img.src = e.target.result;
+            img.style.width = "150px";
+            img.style.height = "auto";
+            img.style.border = "2px solid white";
+            img.style.borderRadius = "5px";
+            img.style.cursor = "pointer";
+            img.onclick = function () {
+              document.getElementById("modalImage").src = e.target.result;
+              document.getElementById("imageModal").style.display = "flex";
+            };
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerText = "X";
+            deleteBtn.style.position = "absolute";
+            deleteBtn.style.top = "5px";
+            deleteBtn.style.right = "5px";
+            deleteBtn.style.background = "red";
+            deleteBtn.style.color = "white";
+            deleteBtn.style.border = "none";
+            deleteBtn.style.cursor = "pointer";
+            deleteBtn.style.borderRadius = "50%";
+            deleteBtn.style.width = "20px";
+            deleteBtn.style.height = "20px";
+            deleteBtn.onclick = function () {
+              gallery.removeChild(imgContainer);
+              saveGalleryState();
+            };
+
+            imgContainer.appendChild(img);
+            imgContainer.appendChild(deleteBtn);
+            gallery.appendChild(imgContainer);
+
+            saveGalleryState();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function saveGalleryState() {
+      const images = Array.from(document.querySelectorAll("#galleryImages img")).map(
+        (img) => img.src
+      );
+      localStorage.setItem("galleryImages", JSON.stringify(images));
+    }
+
+    function loadGalleryState() {
+      const savedImages = JSON.parse(localStorage.getItem("galleryImages")) || [];
+      const gallery = document.getElementById("galleryImages");
+      gallery.innerHTML = "";
+      savedImages.forEach((src) => {
+        const imgContainer = document.createElement("div");
+        imgContainer.style.position = "relative";
+        imgContainer.style.margin = "10px";
+
+        const img = document.createElement("img");
+        img.src = src;
+        img.style.width = "150px";
+        img.style.height = "auto";
+        img.style.border = "2px solid white";
+        img.style.borderRadius = "5px";
+        img.style.cursor = "pointer";
+        img.onclick = function () {
+          document.getElementById("modalImage").src = img.src;
+          document.getElementById("imageModal").style.display = "flex";
+        };
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.innerText = "X";
+        deleteBtn.style.position = "absolute";
+        deleteBtn.style.top = "5px";
+        deleteBtn.style.right = "5px";
+        deleteBtn.style.background = "red";
+        deleteBtn.style.color = "white";
+        deleteBtn.style.border = "none";
+        deleteBtn.style.cursor = "pointer";
+        deleteBtn.style.borderRadius = "50%";
+        deleteBtn.style.width = "20px";
+        deleteBtn.style.height = "20px";
+        deleteBtn.onclick = function () {
+          savedImages.splice(savedImages.indexOf(src), 1);
+          localStorage.setItem("galleryImages", JSON.stringify(savedImages));
+          gallery.removeChild(imgContainer);
+        };
+
+        imgContainer.appendChild(img);
+        imgContainer.appendChild(deleteBtn);
+        gallery.appendChild(imgContainer);
+      });
+    }
+  </script>
+
+  <h2>Sophia AI Chat</h2>
+  <div class="container">
+    <iframe
+      src="https://sophia-three-kappa.vercel.app/"
+      width="100%"
+      height="600px"
+      style="border: none; border-radius: 8px"
+    ></iframe>
+  </div>
+
+  <!-- Geo-Location Reach -->
+  <h2>Geo-Location Reach</h2>
+  <div class="container">
+    <input
+      type="range"
+      id="geoRange"
+      min="0"
+      max="500"
+      value="0"
+      style="width: 100%"
+    />
+    <p>
+      Selected Range:
+      <span id="geoValue">0</span>
+      km | Cost:
+      <span id="geoCost">R0.00</span>
+    </p>
+  </div>
+  <script>
+    function setGeoRangeValue(km) {
+      const geoRangeInput = document.getElementById("geoRange");
+      geoRangeInput.value = km;
+      document.getElementById("geoValue").innerText = km;
+
+      let cost = km > 75 ? (km - 75) * 7 : 0;
+      document.getElementById("geoCost").innerText = "R" + cost.toFixed(2);
+
+      localStorage.setItem("geoRangeValue", km);
+    }
+
+    document.getElementById("geoRange").addEventListener("input", function () {
+      setGeoRangeValue(parseInt(this.value));
+      updateTotalCost();
+    });
+  </script>
+
+  <!-- Google Maps Location -->
+  <h2>Google Maps Location</h2>
+  <div class="container">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4884320.274542217!2d16.490623489151774!3d-28.479251181062!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1e77b95e9e62cf7f%3A0x3a778dd689cb39d!2sSouth%20Africa!5e0!3m2!1sen!2sza!4v1700000000000!5m2!1sen!2sza!1m18!1m12!1m3!1d31556923.99008894!2d16.487002165157548!3d-28.483162304523996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1e77b95e9e62cf7f%3A0x3a778dd689cb39d!2sSouth%20Africa!5e0!3m2!1sen!2sza!4v1700000000000!5m2!1sen!2sza"
+      width="100%"
+      height="600px"
+      style="border: none; border-radius: 8px"
+      allowfullscreen=""
+      loading="lazy"
+    ></iframe>
+  </div>
+
+  <!-- Request Targeted Reach -->
+  <h2>Request Targeted Reach</h2>
+  <div class="container">
+    <input
+      type="text"
+      id="requestInput"
+      placeholder="Enter target location or details"
+      style="padding: 10px; width: 80%; border-radius: 5px; margin-bottom: 10px"
+    />
+    <button
+      id="requestReachBtn"
+      style="
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #00bfff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      Request Targeted Reach
+    </button>
+    <p id="reachCost" style="margin-top: 10px; font-size: 18px">
+      Each input costs: R40.00
+    </p>
+    <p>
+      Total Cost: <span id="totalCost">R0.00</span>
+    </p>
+    <ul id="reachRequests" style="list-style-type: none; padding: 0"></ul>
+  </div>
+
+  <h2>Requested Locations</h2>
+  <div class="container">
+    <table id="locationsTable">
+      <thead>
+        <tr>
+          <th>Location</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="locationsTableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    let totalCost = parseFloat(localStorage.getItem("totalCost")) || 0;
+    const requestList = document.getElementById("reachRequests");
+    const inputField = document.getElementById("requestInput");
+    const totalCostEl = document.getElementById("totalCost");
+
+    function getRequestsData() {
+      return JSON.parse(localStorage.getItem("reachRequestsData")) || [];
+    }
+    function saveRequestsData(dataArray) {
+      localStorage.setItem("reachRequestsData", JSON.stringify(dataArray));
+    }
+
+    function refreshTotalCostDisplay() {
+      totalCostEl.innerText = `R${totalCost.toFixed(2)}`;
+      localStorage.setItem("totalCost", totalCost);
+    }
+
+    function buildLocationsTable() {
+      const tableBody = document.getElementById("locationsTableBody");
+      tableBody.innerHTML = "";
+      const requestsData = getRequestsData();
+
+      requestsData.forEach((reqObj, index) => {
+        let row = document.createElement("tr");
+
+        let locCell = document.createElement("td");
+        locCell.innerText = reqObj.location;
+
+        let actionCell = document.createElement("td");
+        let delBtn = document.createElement("button");
+        delBtn.innerText = "Delete";
+        delBtn.style.background = "red";
+        delBtn.style.color = "white";
+        delBtn.style.border = "none";
+        delBtn.style.cursor = "pointer";
+        delBtn.style.borderRadius = "5px";
+
+        if (localStorage.getItem("servicesLocked")) {
+          delBtn.disabled = true;
+          delBtn.classList.add("locked");
+        }
+
+        delBtn.onclick = function () {
+          totalCost -= 40;
+          refreshTotalCostDisplay();
+
+          requestsData.splice(index, 1);
+          saveRequestsData(requestsData);
+          buildLocationsTable();
+
+          let allLis = requestList.querySelectorAll("li");
+          allLis.forEach((li) => {
+            if (li.innerText.includes(reqObj.location)) {
+              requestList.removeChild(li);
+            }
+          });
+        };
+
+        actionCell.appendChild(delBtn);
+        row.appendChild(locCell);
+        row.appendChild(actionCell);
+        tableBody.appendChild(row);
+      });
+    }
+
+    document.getElementById("requestReachBtn").addEventListener("click", function () {
+      let inputValue = inputField.value.trim();
+      if (inputValue === "") {
+        alert("Please enter a valid target location or details.");
+        return;
+      }
+      totalCost += 40;
+      refreshTotalCostDisplay();
+
+      let listItem = document.createElement("li");
+      listItem.style.margin = "5px 0";
+      listItem.style.padding = "10px";
+      listItem.style.background = "#333";
+      listItem.style.color = "white";
+      listItem.style.borderRadius = "5px";
+
+      const lockedAttr = localStorage.getItem("servicesLocked")
+        ? 'disabled class="deleteBtn locked"'
+        : 'class="deleteBtn"';
+
+      listItem.innerHTML = `Requested Targeted Reach: ${inputValue} - Cost: R40.00 
+        <button style='margin-left: 10px; padding: 5px; background: red; color: white; border: none; cursor: pointer; border-radius: 5px;' ${lockedAttr}>Delete</button>`;
+
+      requestList.appendChild(listItem);
+
+      let requestsData = getRequestsData();
+      requestsData.push({ location: inputValue, cost: 40 });
+      saveRequestsData(requestsData);
+
+      buildLocationsTable();
+      inputField.value = "";
+
+      let deleteBtn = listItem.querySelector("button.deleteBtn");
+      deleteBtn.addEventListener("click", function () {
+        if (deleteBtn.disabled) {
+          return;
+        }
+        totalCost -= 40;
+        refreshTotalCostDisplay();
+        requestList.removeChild(listItem);
+
+        let updated = getRequestsData().filter(obj => obj.location !== inputValue);
+        saveRequestsData(updated);
+        buildLocationsTable();
+      });
+    });
+  </script>
+
+  <!-- Additional Services -->
+  <h2>Additional Services</h2>
+  <div class="container">
+    <p>
+      Geo-Location Reach Cost:
+      <span id="geoTotalCost">R0.00</span>
+    </p>
+    <p>
+      Targeted Reach Cost:
+      <span id="targetTotalCost">R0.00</span>
+    </p>
+    <p>
+      <strong>
+        Overall Total Cost:
+        <span id="overallTotalCost">R0.00</span>
+      </strong>
+    </p>
+  </div>
+  <script>
+    function updateTotalCost() {
+      let geoCostText = document
+        .getElementById("geoCost")
+        .innerText.replace("R", "");
+      let geoCost = parseFloat(geoCostText) || 0;
+
+      let targetCostText = document
+        .getElementById("totalCost")
+        .innerText.replace("R", "");
+      let targetCost = parseFloat(targetCostText) || 0;
+
+      document.getElementById("geoTotalCost").innerText = `R${geoCost.toFixed(2)}`;
+      document.getElementById("targetTotalCost").innerText = `R${targetCost.toFixed(2)}`;
+      document.getElementById("overallTotalCost").innerText = `R${(
+        geoCost + targetCost
+      ).toFixed(2)}`;
+    }
+
+    document.getElementById("geoRange").addEventListener("input", updateTotalCost);
+    document.getElementById("requestReachBtn").addEventListener("click", updateTotalCost);
+
+    document.addEventListener("click", (e) => {
+      if (e.target && e.target.matches(".deleteBtn")) {
+        updateTotalCost();
+      }
+    });
+  </script>
+
+  <!-- Locking Terms -->
+  <div class="container" style="margin-top: 20px; text-align: center">
+    <p>
+      By using the Additional Services feature, the client agrees that they will
+      be billed monthly and accept these terms. These services will lock for 30
+      days.
+    </p>
+    <label>
+      <input
+        type="checkbox"
+        id="agreeTerms"
+        style="margin-right: 5px"
+      />
+      I agree to these terms
+    </label>
+    <p
+      id="countdownTimer"
+      style="margin-top: 10px; font-size: 18px; color: red; display: none"
+    ></p>
+  </div>
+  <script>
+    function startCountdown(duration) {
+      let timerDisplay = document.getElementById("countdownTimer");
+      let endTime = Date.now() + duration;
+
+      function updateTimer() {
+        let remainingTime = endTime - Date.now();
+        if (remainingTime <= 0) {
+          timerDisplay.innerText = "";
+          timerDisplay.style.display = "none";
+          localStorage.removeItem("servicesLocked");
+          document.getElementById("geoRange").disabled = false;
+          document.getElementById("requestReachBtn").disabled = false;
+        } else {
+          let days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+          let hours = Math.floor(
+            (remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          let minutes = Math.floor(
+            (remainingTime % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          let seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+          timerDisplay.innerText = `Lock expires in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+          timerDisplay.style.display = "block";
+          requestAnimationFrame(updateTimer);
+        }
+      }
+      updateTimer();
+    }
+
+    document.getElementById("agreeTerms").addEventListener("change", function (e) {
+      if (!e.target.checked) {
+        e.target.checked = true;
+        return;
+      }
+
+      let geoSlider = document.getElementById("geoRange");
+      let requestButton = document.getElementById("requestReachBtn");
+
+      geoSlider.disabled = true;
+      requestButton.disabled = true;
+      let lockEndTime = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+      localStorage.setItem("servicesLocked", String(lockEndTime));
+      alert("Your selected services have been locked for 30 days.");
+      startCountdown(30 * 24 * 60 * 60 * 1000);
+
+      document.querySelectorAll(".deleteBtn").forEach((btn) => {
+        btn.disabled = true;
+        btn.classList.add("locked");
+      });
+    });
+  </script>
+
+  <!-- Unlock Services -->
+  <div class="container" style="margin-top: 20px; text-align: center">
+    <input
+      type="password"
+      id="unlockPassword"
+      placeholder="Enter password to unlock"
+      style="padding: 5px; margin-bottom: 10px"
+    />
+    <button
+      id="unlockServicesBtn"
+      style="
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: red;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      Request Unlock
+    </button>
+    <p style="font-size: 14px; color: white; margin-top: 5px">
+      After Request, Refresh Page to Unlock
+    </p>
+    <p
+      id="unlockMessage"
+      style="margin-top: 10px; font-size: 18px; color: green; display: none"
+    >
+      Unlock request sent!
+    </p>
+  </div>
+  <script>
+    document
+      .getElementById("unlockServicesBtn")
+      .addEventListener("click", function () {
+        let password = document.getElementById("unlockPassword").value;
+        if (password !== "ClientInsightAI2024") {
+          alert("Incorrect password. Please try again.");
+          return;
+        }
+
+        if (
+          confirm(
+            "Are you sure you want to request an unlock? This will reset your locked services AND clear all data."
+          )
+        ) {
+          localStorage.clear();
+
+          document.getElementById("geoRange").disabled = false;
+          document.getElementById("requestReachBtn").disabled = false;
+          document.getElementById("countdownTimer").style.display = "none";
+          document.getElementById("unlockMessage").style.display = "block";
+        }
+      });
+  </script>
+
+  <!-- Logout -->
+  <div class="container" style="margin-top: 20px; text-align: center">
+    <button
+      id="logoutBtn"
+      style="
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: red;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      Logout
+    </button>
+  </div>
+  <script>
+    document.getElementById("logoutBtn").addEventListener("click", function () {
+      if (confirm("Are you sure you want to log out? You will have to log in again.")) {
+        localStorage.setItem("isUserLoggedIn", "false");
+        localStorage.removeItem("loggedInUsername");
+        location.reload();
+      }
+    });
+
+    // On page load, restore data & states
+    window.addEventListener("load", function () {
+      // Check login state
+      if (localStorage.getItem("isUserLoggedIn") === "true") {
+        document.getElementById("loginContainer").style.display = "none";
+        currentUser = localStorage.getItem("loggedInUsername") || null;
+      } else {
+        document.getElementById("loginContainer").style.display = "flex";
+      }
+      maybeShowAdminPanel();
+
+      // Load & render the table
+      const storedCsv = loadTableData();
+      renderTableFromCsv(storedCsv);
+      document.getElementById("csvInput").value = storedCsv; // for admins
+
+      // Show total cost from localStorage
+      let storedCost = localStorage.getItem("totalCost");
+      if (storedCost) {
+        totalCost = parseFloat(storedCost);
+        document.getElementById("totalCost").innerText = `R${totalCost.toFixed(2)}`;
+      }
+
+      // Load gallery images
+      loadGalleryState();
+
+      // Restore the geoRange slider
+      let savedGeoValue = localStorage.getItem("geoRangeValue");
+      if (savedGeoValue !== null) {
+        setGeoRangeValue(parseInt(savedGeoValue));
+      } else {
+        setGeoRangeValue(0);
+      }
+      updateTotalCost();
+
+      // Rebuild "Requested Locations" from localStorage
+      let requestsData = JSON.parse(localStorage.getItem("reachRequestsData")) || [];
+      requestsData.forEach(({ location, cost }) => {
+        let li = document.createElement("li");
+        li.style.margin = "5px 0";
+        li.style.padding = "10px";
+        li.style.background = "#333";
+        li.style.color = "white";
+        li.style.borderRadius = "5px";
+
+        const lockedAttr = localStorage.getItem("servicesLocked")
+          ? 'disabled class="deleteBtn locked"'
+          : 'class="deleteBtn"';
+
+        li.innerHTML = `Requested Targeted Reach: ${location} - Cost: R${cost}.00
+          <button style='margin-left: 10px; padding: 5px; background: red; color: white; border: none; cursor: pointer; border-radius: 5px;' ${lockedAttr}>Delete</button>`;
+
+        document.getElementById("reachRequests").appendChild(li);
+
+        let delBtn = li.querySelector(".deleteBtn");
+        delBtn.addEventListener("click", function () {
+          if (delBtn.disabled) {
+            return;
+          }
+          totalCost -= 40;
+          refreshTotalCostDisplay();
+          document.getElementById("reachRequests").removeChild(li);
+
+          let updated = requestsData.filter((obj) => obj.location !== location);
+          localStorage.setItem("reachRequestsData", JSON.stringify(updated));
+
+          buildLocationsTable();
+        });
+      });
+
+      buildLocationsTable();
+
+      // Check if the 30-day lock is still active
+      let lockEndTime = Number(localStorage.getItem("servicesLocked"));
+      if (lockEndTime && Date.now() < lockEndTime) {
+        // Lock is active
+        document.getElementById("geoRange").disabled = true;
+        document.getElementById("requestReachBtn").disabled = true;
+        document.getElementById("agreeTerms").checked = true;
+
+        document.querySelectorAll(".deleteBtn").forEach((btn) => {
+          btn.disabled = true;
+          btn.classList.add("locked");
+        });
+
+        startCountdown(lockEndTime - Date.now());
+      } else {
+        localStorage.removeItem("servicesLocked");
+      }
+    });
+  </script>
+</body>
+</html>
